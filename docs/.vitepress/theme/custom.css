@@ -1,0 +1,28 @@
+:root {
+  --dg-hero-highlight: rgba(146, 187, 255, 0.72);
+  --dg-hero-highlight-strong: rgba(125, 170, 247, 0.86);
+}
+
+.VPHomeHero .name,
+.VPHomeHero .text {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0 0.18em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.VPHomeHero .name {
+  margin-bottom: 0.12em;
+  background: linear-gradient(180deg, transparent 42%, var(--dg-hero-highlight) 42%);
+}
+
+.VPHomeHero .text {
+  display: inline;
+  line-height: 1.08;
+  background: linear-gradient(180deg, transparent 34%, var(--dg-hero-highlight-strong) 34%);
+}
+
+.VPHomeHero .tagline {
+  max-width: 760px;
+}

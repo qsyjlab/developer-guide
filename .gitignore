@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+docs/node_modules/
+
+# build output
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# logs
+*.log
+pnpm-debug.log*
+
+# system files
+.DS_Store
