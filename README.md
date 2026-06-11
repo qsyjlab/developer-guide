@@ -51,5 +51,3 @@ docs/
 - 推送到 `main` 分支后，会自动安装依赖并构建 `docs` 子包
 - 构建产物会发布到 GitHub Pages
 - 当前 VitePress `base` 已设置为 `/developer-guide/`，适用于仓库名为 `developer-guide` 的 GitHub Pages 地址
-
-首次启用时，只需要在 GitHub 仓库设置中将 Pages 的 Source 设为 `GitHub Actions`。
