@@ -52,6 +52,13 @@ export default defineConfig({
                   { text: 'SpringBoot 实现', link: '/developer/business-implementation/minio-storage/springboot' },
                   { text: 'Nest 实现', link: '/developer/business-implementation/minio-storage/nest' }
                 ]
+              },
+              {
+                text: '微前端',
+                collapsed: false,
+                items: [
+                  { text: 'Vite 版本', link: '/developer/business-implementation/micro-frontend/practice' }
+                ]
               }
             ]
           },

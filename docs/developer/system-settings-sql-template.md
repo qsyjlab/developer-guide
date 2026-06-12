@@ -16,6 +16,7 @@
 | [MinIO 文件存储 - SQL 解释](./business-implementation/minio-storage/sql.md) | 文件元数据数据库层 | 文件对象、上传会话、分片记录 |
 | [MinIO 文件存储 - SpringBoot 实现](./business-implementation/minio-storage/springboot.md) | 文件存储 Java 实现 | MinIO Client、MyBatis-Plus、预签名 URL |
 | [MinIO 文件存储 - Nest 实现](./business-implementation/minio-storage/nest.md) | 文件存储 Nest 实现 | provider、service、上传下载 |
+| [微前端 Vite 版本](./business-implementation/micro-frontend/practice.md) | 主子应用拆分 / 多团队并行 / 独立部署 | 主应用、子应用、通信、隔离、发布路径 |
 
 ## 共用约定
 
@@ -26,6 +27,7 @@
 
 ## 推荐入口顺序
 
-1. 先选业务域：角色权限 / 日志审计。
-2. 每个业务域先看 SQL 解释，确认建表、索引、公共查询。
+1. 先选业务域：角色权限 / 日志审计 / 文件存储 / 微前端。
+2. 数据驱动型业务先看 SQL 解释，确认建表、索引、公共查询。
 3. 再按实际技术栈进入 SpringBoot 实现或 Nest 实现。
+4. 如果是前端平台拆分场景，直接阅读“微前端 Vite 版本”。
