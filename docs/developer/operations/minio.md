@@ -167,7 +167,89 @@ docker compose exec minio mc ls local/archive-files
 docker compose exec minio mc stat local/archive-files/path/to/object
 ```
 
-## 十、生产检查清单
+## 十、原始文件备份
+
+用途：
+
+- 只把 MinIO 中已经存在的对象文件导出出来
+- 不处理业务表
+- 不重建业务目录结构
+
+核心原则：
+
+- 备份出来的目录结构以 MinIO `objectKey` 为准
+- 不是以用户上传时的原始文件名为准
+- 不额外拼接数据库里的业务路径
+
+### 10.1 直接导出到本地目录
+
+```bash
+mc alias set local http://127.0.0.1:9000 MINIO_USER MINIO_PASS
+mc mirror local/archive-files /backup/archive-files
+```
+
+作用：
+
+- 将 `archive-files` bucket 中的对象按对象路径导出到 `/backup/archive-files`
+
+示例：
+
+如果 MinIO 中对象为：
+
+```text
+attachments/test.jpg
+```
+
+导出后就是：
+
+```text
+/backup/archive-files/attachments/test.jpg
+```
+
+如果 MinIO 中对象为：
+
+```text
+blobs/ab/cd/8f14e45fceea167a5a36dedd4bea2543.bin
+```
+
+导出后就是：
+
+```text
+/backup/archive-files/blobs/ab/cd/8f14e45fceea167a5a36dedd4bea2543.bin
+```
+
+### 10.2 备份到另一套 MinIO
+
+```bash
+mc alias set local http://127.0.0.1:9000 MINIO_USER MINIO_PASS
+mc alias set backup http://10.0.0.20:9000 BACKUP_USER BACKUP_PASS
+mc mirror local/archive-files backup/archive-files
+```
+
+作用：
+
+- 将当前 bucket 中的对象同步到另一套 MinIO
+- 适合异机备份和后续快速恢复
+
+### 10.3 属性解释
+
+| 项目 | 说明 |
+|------|------|
+| `mc mirror` | 按对象路径同步文件 |
+| `local/archive-files` | 源 bucket |
+| `/backup/archive-files` | 本地备份目录 |
+| `backup/archive-files` | 目标 MinIO bucket |
+| `objectKey` | MinIO 中对象的实际路径和文件名 |
+
+### 10.4 闭坑点
+
+- 这类备份拿出来的是对象文件，不是业务恢复包
+- 导出后的文件名是否是 `test.jpg`，取决于对象名是否本来就是 `test.jpg`
+- 如果对象名是哈希路径，导出后仍然是哈希路径
+- 未完成的 multipart 上传不属于正式对象，不应当作为原始文件备份结果
+- 只备份 MinIO 文件，不备份数据库，恢复后只能拿回文件本体，拿不回业务引用关系
+
+## 十一、生产检查清单
 
 | 检查项 | 要求 |
 |--------|------|

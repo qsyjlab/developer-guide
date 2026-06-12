@@ -54,6 +54,26 @@ export default defineConfig({
                 ]
               },
               {
+                text: '附件预览',
+                collapsed: false,
+                items: [
+                  { text: '方案', link: '/developer/business-implementation/attachment-preview/overview' },
+                  { text: 'SQL 解释', link: '/developer/business-implementation/attachment-preview/sql' },
+                  { text: 'SpringBoot 实现', link: '/developer/business-implementation/attachment-preview/springboot' },
+                  { text: 'Nest 实现', link: '/developer/business-implementation/attachment-preview/nest' }
+                ]
+              },
+              {
+                text: '附件存储',
+                collapsed: false,
+                items: [
+                  { text: '方案', link: '/developer/business-implementation/attachment-storage/overview' },
+                  { text: 'SQL 解释', link: '/developer/business-implementation/attachment-storage/sql' },
+                  { text: 'SpringBoot 实现', link: '/developer/business-implementation/attachment-storage/springboot' },
+                  { text: 'Nest 实现', link: '/developer/business-implementation/attachment-storage/nest' }
+                ]
+              },
+              {
                 text: '微前端',
                 collapsed: false,
                 items: [

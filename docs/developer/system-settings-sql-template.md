@@ -16,6 +16,14 @@
 | [MinIO 文件存储 - SQL 解释](./business-implementation/minio-storage/sql.md) | 文件元数据数据库层 | 文件对象、上传会话、分片记录 |
 | [MinIO 文件存储 - SpringBoot 实现](./business-implementation/minio-storage/springboot.md) | 文件存储 Java 实现 | MinIO Client、MyBatis-Plus、预签名 URL |
 | [MinIO 文件存储 - Nest 实现](./business-implementation/minio-storage/nest.md) | 文件存储 Nest 实现 | provider、service、上传下载 |
+| [附件预览方案](./business-implementation/attachment-preview/overview.md) | 文件在线预览 / 文档渲染 / 失败兜底 | 预览类型、组件分发、DOCX/PDF/XLSX 策略 |
+| [附件预览 - SQL 解释](./business-implementation/attachment-preview/sql.md) | 预览数据库层 | 主表、任务表、产物表、查询语句 |
+| [附件预览 - SpringBoot 实现](./business-implementation/attachment-preview/springboot.md) | 预览 Java 实现 | 预览状态、任务编排、产物生成 |
+| [附件预览 - Nest 实现](./business-implementation/attachment-preview/nest.md) | 预览 Nest 实现 | 模块结构、状态流转、任务执行 |
+| [附件存储方案](./business-implementation/attachment-storage/overview.md) | 大文件上传 / 断点续传 / 文件复用 | 分片上传、会话管理、引用复用、删除回收 |
+| [附件存储 - SQL 解释](./business-implementation/attachment-storage/sql.md) | 存储数据库层 | 文件主表、上传会话、分片表、引用表 |
+| [附件存储 - SpringBoot 实现](./business-implementation/attachment-storage/springboot.md) | 存储 Java 实现 | 分片上传、断点续传、引用复用 |
+| [附件存储 - Nest 实现](./business-implementation/attachment-storage/nest.md) | 存储 Nest 实现 | 初始化上传、分片状态、完成上传 |
 | [微前端 Vite 版本](./business-implementation/micro-frontend/practice.md) | 主子应用拆分 / 多团队并行 / 独立部署 | 主应用、子应用、通信、隔离、发布路径 |
 
 ## 共用约定
@@ -27,7 +35,8 @@
 
 ## 推荐入口顺序
 
-1. 先选业务域：角色权限 / 日志审计 / 文件存储 / 微前端。
+1. 先选业务域：角色权限 / 日志审计 / 文件存储 / 附件预览 / 附件存储 / 微前端。
 2. 数据驱动型业务先看 SQL 解释，确认建表、索引、公共查询。
 3. 再按实际技术栈进入 SpringBoot 实现或 Nest 实现。
-4. 如果是前端平台拆分场景，直接阅读“微前端 Vite 版本”。
+4. 如果是附件能力建设，优先区分“预览方案”和“存储方案”两篇文档。
+5. 如果是前端平台拆分场景，直接阅读“微前端 Vite 版本”。

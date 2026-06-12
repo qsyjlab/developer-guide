@@ -121,10 +121,19 @@ export default defineConfig({
 ### 4.2 Router
 
 ```ts
+import { qiankunWindow } from "vite-plugin-qiankun/dist/helper";
 import { createRouter, createWebHistory } from "vue-router";
 
+const ADMIN_MICRO_BASE = "/console/";
+
+function getRouterBase() {
+  return qiankunWindow.__POWERED_BY_QIANKUN__
+    ? ADMIN_MICRO_BASE
+    : import.meta.env.BASE_URL;
+}
+
 export const router = createRouter({
-  history: createWebHistory("/console/"),
+  history: createWebHistory(getRouterBase()),
   routes: [
     { path: "/", component: () => import("@/views/home-view.vue") },
     { path: "/users", component: () => import("@/views/users-view.vue") },
@@ -132,40 +141,148 @@ export const router = createRouter({
 });
 ```
 
-### 4.3 子应用双模式运行
+### 4.3 推荐目录拆分
 
 ```ts
-let app: unknown;
+src/
+  qiankun/
+    index.ts
+    render.ts
+    router.ts
+    state.ts
+  main.ts
+```
 
-export async function render(props?: Record<string, unknown>) {
-  // 创建应用
-  // 注册 router/store
-  // 挂载到容器
-}
+作用：
 
-if (!(window as { __POWERED_BY_QIANKUN__?: boolean }).__POWERED_BY_QIANKUN__) {
-  render();
-}
+- `index.ts` 只管接 qiankun 生命周期
+- `render.ts` 只管创建和卸载应用实例
+- `router.ts` 只管路由 base
+- `state.ts` 只管主子应用共享状态
 
-export async function bootstrap() {}
+### 4.4 `index.ts` 入口写法
 
-export async function mount(props: Record<string, unknown>) {
-  await render(props);
-}
+```ts
+import { qiankunWindow, renderWithQiankun } from 'vite-plugin-qiankun/dist/helper'
+import { renderMicroApp, unmountMicroApp } from './render'
+import type { AuthZeroQiankunProps } from './types'
 
-export async function unmount() {
-  // 卸载应用
-  // 清理监听器
-  // 清理定时器
+export function setupMicroApp() {
+  renderWithQiankun({
+    update() {
+      return Promise.resolve()
+    },
+    bootstrap() {
+      return Promise.resolve()
+    },
+    mount(props: AuthZeroQiankunProps) {
+      return renderMicroApp({
+        container: props.container,
+        props,
+      })
+    },
+    unmount() {
+      unmountMicroApp()
+      return Promise.resolve()
+    }
+  })
+
+  if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
+    renderMicroApp()
+  }
 }
 ```
 
-### 4.4 注意项
+属性解释：
+
+| 项目 | 作用 |
+| --- | --- |
+| `renderWithQiankun` | 注册生命周期，交给 qiankun 调用 |
+| `mount(props)` | 主应用装载子应用时执行 |
+| `props.container` | 子应用挂载容器 |
+| `AuthZeroQiankunProps` | 主应用传入的容器和上下文字段类型 |
+| `unmount()` | 切换路由或卸载时清理实例 |
+| `!qiankunWindow.__POWERED_BY_QIANKUN__` | 允许本地独立运行 |
+
+闭坑点：
+
+- 不要把创建应用的代码直接堆在 `index.ts`
+- 不要混用旧版手动导出 `bootstrap/mount/unmount` 模板
+- 独立运行时必须也能走同一套 `renderMicroApp()`
+
+### 4.5 `render.ts` 挂载写法
+
+```ts
+import { createApp } from "vue";
+import type { App as VueApp } from "vue";
+import App from "@/App.vue";
+import { setupRouter } from "@/router";
+import setupPlugins from "@/plugins";
+import setupStore from "@/store";
+
+let app: VueApp<Element> | null = null;
+
+function resolveContainer(container?: Element | DocumentFragment) {
+  if (container instanceof Element) {
+    const appRoot = container.querySelector("#app");
+    if (appRoot instanceof Element) {
+      return appRoot;
+    }
+    return container;
+  }
+
+  const root = document.querySelector("#app");
+  if (root instanceof Element) {
+    return root;
+  }
+
+  const fallbackRoot = document.createElement("div");
+  fallbackRoot.id = "app";
+  document.body.appendChild(fallbackRoot);
+  return fallbackRoot;
+}
+
+export async function renderMicroApp(options: {
+  container?: Element | DocumentFragment;
+  props?: Record<string, unknown>;
+} = {}) {
+  const mountContainer = resolveContainer(options.container);
+
+  app = createApp(App);
+  setupPlugins(app);
+  setupStore(app);
+  await setupRouter(app);
+  app.mount(mountContainer);
+}
+
+export function unmountMicroApp() {
+  app?.unmount();
+  app = null;
+}
+```
+
+属性解释：
+
+| 项目 | 作用 |
+| --- | --- |
+| `resolveContainer()` | 兼容 qiankun 容器挂载和独立运行 |
+| `setupPlugins(app)` | 注册插件、指令、全局能力 |
+| `setupRouter(app)` | 在 mount 前完成路由初始化 |
+| `app?.unmount()` | 卸载 Vue 实例 |
+
+闭坑点：
+
+- `container.querySelector("#app")` 找不到时要兜底
+- 路由初始化必须在 `mount` 前完成
+- 除了 `app.unmount()`，还要清理事件监听、定时器、WebSocket、全局订阅
+
+### 4.6 注意项
 
 | 配置项      | 正确写法              | 常见错误                 |
 | ----------- | --------------------- | ------------------------ |
 | Vite `base` | `/console/`           | 写成 `/`                 |
 | Router base | `/console/`           | 写成 `/`                 |
+| 生命周期入口 | `renderWithQiankun`   | 继续沿用旧的裸模板写法   |
 | mount 模式  | 支持独立运行 + 被挂载 | 只能单独跑，不能 mount   |
 | unmount     | 清理副作用            | 卸载后残留定时器和监听器 |
 
