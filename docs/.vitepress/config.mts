@@ -13,7 +13,8 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '技术选型', link: '/developer/project-overview' },
       { text: '业务实现模板', link: '/developer/system-settings-sql-template' },
-      { text: '编码规范', link: '/developer/standards/common' }
+      { text: '编码规范', link: '/developer/standards/common' },
+      { text: '外链参考', link: '/developer/external-links' }
     ],
     sidebar: [
       {
@@ -101,6 +102,14 @@ export default defineConfig({
               { text: 'Vue 前端扩展', link: '/developer/standards/vue' },
               { text: 'NestJS 后端扩展', link: '/developer/standards/nestjs' },
               { text: 'Electron 客户端扩展', link: '/developer/standards/electron' }
+            ]
+          },
+          {
+            text: '外链参考',
+            collapsed: false,
+            items: [
+              { text: '纯客户端桌面架构', link: '/developer/external-links' },
+              { text: 'desktop-infra-starter', link: 'https://qsyjlab.github.io/desktop-infra-starter/' }
             ]
           }
         ]
