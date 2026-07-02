@@ -21,6 +21,7 @@ export default defineConfig({
         text: '开发参考',
         collapsed: false,
         items: [
+          { text: '框架推荐与对齐路线', link: '/developer/framework-recommendation' },
           { text: '技术选型清单', link: '/developer/project-overview' },
           {
             text: '业务实现模板',
