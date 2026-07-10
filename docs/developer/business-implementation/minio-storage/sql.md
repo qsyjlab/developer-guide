@@ -27,71 +27,71 @@
 
 ```sql
 CREATE TABLE IF NOT EXISTS `{prefix}_file_objects` (
-  `id` BIGINT PRIMARY KEY,
-  `bucket` VARCHAR(128) NOT NULL,
-  `object_key` VARCHAR(512) NOT NULL,
-  `original_name` VARCHAR(255) NOT NULL,
-  `content_type` VARCHAR(128),
-  `size_bytes` BIGINT NOT NULL DEFAULT 0,
-  `sha256` CHAR(64),
-  `biz_type` VARCHAR(64) NOT NULL,
-  `biz_id` BIGINT,
-  `access_scope` VARCHAR(32) NOT NULL DEFAULT 'private',
-  `storage_provider` VARCHAR(32) NOT NULL DEFAULT 'minio',
-  `status` TINYINT NOT NULL DEFAULT 1,
-  `created_by` BIGINT,
-  `created_at` DATETIME NOT NULL,
-  `updated_at` DATETIME NOT NULL,
-  `deleted_at` DATETIME,
+  `id` BIGINT PRIMARY KEY COMMENT '文件对象ID（雪花ID）',
+  `bucket` VARCHAR(128) NOT NULL COMMENT 'MinIO bucket 名称',
+  `object_key` VARCHAR(512) NOT NULL COMMENT 'MinIO 对象 key（推荐 bizType/yyyyMMdd/uuid.ext）',
+  `original_name` VARCHAR(255) NOT NULL COMMENT '原始文件名',
+  `content_type` VARCHAR(128) COMMENT 'MIME 类型（可空）',
+  `size_bytes` BIGINT NOT NULL DEFAULT 0 COMMENT '文件字节数',
+  `sha256` CHAR(64) COMMENT '文件内容哈希（可空，用于去重）',
+  `biz_type` VARCHAR(64) NOT NULL COMMENT '业务类型：order/contract/avatar 等',
+  `biz_id` BIGINT COMMENT '业务对象ID（可空，类级别文件为空）',
+  `access_scope` VARCHAR(32) NOT NULL DEFAULT 'private' COMMENT '访问范围：private/public/protected 等',
+  `storage_provider` VARCHAR(32) NOT NULL DEFAULT 'minio' COMMENT '存储提供方：minio/oss/cos 等',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '文件状态：1=正常，0=已删除/不可用',
+  `created_by` BIGINT COMMENT '上传人账号ID，关联 accounts.id（可空）',
+  `created_at` DATETIME NOT NULL COMMENT '创建时间',
+  `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+  `deleted_at` DATETIME COMMENT '软删除时间（可空）',
   UNIQUE KEY `uk_file_objects_bucket_key` (`bucket`, `object_key`),
   KEY `idx_file_objects_biz` (`biz_type`, `biz_id`, `status`, `created_at`),
   KEY `idx_file_objects_sha256` (`sha256`),
   KEY `idx_file_objects_created_by` (`created_by`, `created_at`)
-);
+) COMMENT = 'MinIO 文件对象元数据表';
 ```
 
 ### 3.2 上传会话
 
 ```sql
 CREATE TABLE IF NOT EXISTS `{prefix}_file_upload_sessions` (
-  `id` BIGINT PRIMARY KEY,
-  `upload_no` VARCHAR(64) NOT NULL,
-  `bucket` VARCHAR(128) NOT NULL,
-  `object_key` VARCHAR(512) NOT NULL,
-  `original_name` VARCHAR(255) NOT NULL,
-  `content_type` VARCHAR(128),
-  `total_size_bytes` BIGINT NOT NULL DEFAULT 0,
-  `part_size_bytes` BIGINT NOT NULL DEFAULT 0,
-  `minio_upload_id` VARCHAR(256),
-  `biz_type` VARCHAR(64) NOT NULL,
-  `biz_id` BIGINT,
-  `status` TINYINT NOT NULL DEFAULT 0,
-  `created_by` BIGINT,
-  `created_at` DATETIME NOT NULL,
-  `updated_at` DATETIME NOT NULL,
-  `completed_at` DATETIME,
-  `expires_at` DATETIME,
+  `id` BIGINT PRIMARY KEY COMMENT '会话ID（雪花ID）',
+  `upload_no` VARCHAR(64) NOT NULL COMMENT '上传编号（前端生成，断点续传凭证）',
+  `bucket` VARCHAR(128) NOT NULL COMMENT 'MinIO bucket 名称',
+  `object_key` VARCHAR(512) NOT NULL COMMENT 'MinIO 对象 key',
+  `original_name` VARCHAR(255) NOT NULL COMMENT '原始文件名',
+  `content_type` VARCHAR(128) COMMENT 'MIME 类型（可空）',
+  `total_size_bytes` BIGINT NOT NULL DEFAULT 0 COMMENT '文件总大小（字节）',
+  `part_size_bytes` BIGINT NOT NULL DEFAULT 0 COMMENT '分片大小（字节）',
+  `minio_upload_id` VARCHAR(256) COMMENT 'MinIO multipart upload 返回的 uploadId（可空）',
+  `biz_type` VARCHAR(64) NOT NULL COMMENT '业务类型：order/contract/avatar 等',
+  `biz_id` BIGINT COMMENT '业务对象ID（可空）',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '会话状态：0=初始化，1=上传中，2=已完成，3=已取消，4=已过期',
+  `created_by` BIGINT COMMENT '上传人账号ID，关联 accounts.id（可空）',
+  `created_at` DATETIME NOT NULL COMMENT '创建时间',
+  `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+  `completed_at` DATETIME COMMENT '完成时间（可空）',
+  `expires_at` DATETIME COMMENT '过期时间（可空）',
   UNIQUE KEY `uk_file_upload_sessions_no` (`upload_no`),
   UNIQUE KEY `uk_file_upload_sessions_bucket_key` (`bucket`, `object_key`),
   KEY `idx_file_upload_sessions_biz` (`biz_type`, `biz_id`, `status`),
   KEY `idx_file_upload_sessions_status_expires` (`status`, `expires_at`)
-);
+) COMMENT = '上传会话表（大文件/断点续传）';
 ```
 
 ### 3.3 上传分片
 
 ```sql
 CREATE TABLE IF NOT EXISTS `{prefix}_file_upload_parts` (
-  `id` BIGINT PRIMARY KEY,
-  `session_id` BIGINT NOT NULL,
-  `part_number` INT NOT NULL,
-  `etag` VARCHAR(128) NOT NULL,
-  `size_bytes` BIGINT NOT NULL DEFAULT 0,
-  `sha256` CHAR(64),
-  `uploaded_at` DATETIME NOT NULL,
+  `id` BIGINT PRIMARY KEY COMMENT '分片ID（雪花ID）',
+  `session_id` BIGINT NOT NULL COMMENT '会话ID，关联 file_upload_sessions.id',
+  `part_number` INT NOT NULL COMMENT '分片序号（MinIO partNumber，从 1 起）',
+  `etag` VARCHAR(128) NOT NULL COMMENT '分片 ETag（MinIO 返回，用于 complete 校验）',
+  `size_bytes` BIGINT NOT NULL DEFAULT 0 COMMENT '分片字节数',
+  `sha256` CHAR(64) COMMENT '分片内容哈希（可空，用于校验）',
+  `uploaded_at` DATETIME NOT NULL COMMENT '上传完成时间',
   UNIQUE KEY `uk_file_upload_parts_session_part` (`session_id`, `part_number`),
   KEY `idx_file_upload_parts_session_id` (`session_id`)
-);
+) COMMENT = '上传分片记录表';
 ```
 
 ## 四、状态枚举
@@ -200,3 +200,5 @@ WHERE s.status IN (3, 4)
 3. 下载不要存永久 URL，由后端鉴权后生成预签名 URL。
 4. 普通上传只需要 `file_objects`；大文件 / 断点续传再启用上传会话和分片表。
 5. 删除优先软删数据库记录，再异步清理 MinIO 对象，避免误删不可恢复。
+6. 建表语句每个字段必须带 `COMMENT`，表必须带表级 `COMMENT`；枚举型字段（`status` 等）须在注释中列出全部取值含义。
+7. 外键字段须在注释中标注关联表与字段，如"会话ID，关联 file_upload_sessions.id"。
